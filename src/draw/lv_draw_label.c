@@ -172,9 +172,6 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_label(const lv_area_t * coords, const lv_area
         line_width = lv_txt_get_width(&txt[line_start], line_end - line_start, font, dsc->letter_space, dsc->flag);
         pos.x += lv_area_get_width(coords) - line_width;
     }
-
-    lv_opa_t opa = dsc->opa;
-
     uint32_t sel_start = dsc->sel_start;
     uint32_t sel_end = dsc->sel_end;
     if(sel_start > sel_end) {
@@ -285,7 +282,11 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_label(const lv_area_t * coords, const lv_area
                     sel_coords.y1 = pos.y;
                     sel_coords.x2 = pos.x + letter_w + dsc->letter_space - 1;
                     sel_coords.y2 = pos.y + line_height - 1;
+<<<<<<< HEAD
                     lv_draw_rect(&sel_coords, mask, &draw_dsc_sel);
+=======
+                    lv_draw_rect(draw, &draw_dsc_sel, &sel_coords);
+>>>>>>> make basic image drawng work
                     color = dsc->sel_color;
                 }
             }
