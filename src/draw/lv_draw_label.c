@@ -282,16 +282,13 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_label(const lv_area_t * coords, const lv_area
                     sel_coords.y1 = pos.y;
                     sel_coords.x2 = pos.x + letter_w + dsc->letter_space - 1;
                     sel_coords.y2 = pos.y + line_height - 1;
-<<<<<<< HEAD
-                    lv_draw_rect(&sel_coords, mask, &draw_dsc_sel);
-=======
                     lv_draw_rect(draw, &draw_dsc_sel, &sel_coords);
->>>>>>> make basic image drawng work
                     color = dsc->sel_color;
                 }
             }
 
-            lv_draw_letter(&pos, mask, font, letter, color, opa, dsc->blend_mode);
+            dsc_mod.color = color;
+            lv_draw_letter(draw, &dsc_mod, &pos, letter);
 
             if(letter_w > 0) {
                 pos.x += letter_w + dsc->letter_space;
@@ -351,15 +348,11 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_label(const lv_area_t * coords, const lv_area
     LV_ASSERT_MEM_INTEGRITY();
 }
 
-void lv_draw_letter(const lv_point_t * pos_p, const lv_area_t * clip_area,
-                    const lv_font_t * font_p,
-                    uint32_t letter,
-                    lv_color_t color, lv_opa_t opa, lv_blend_mode_t blend_mode)
+void lv_draw_letter(lv_draw_t * draw, const lv_draw_label_dsc_t * dsc,  const lv_point_t * pos_p, uint32_t letter)
 {
-
-    const lv_draw_backend_t * backend = lv_draw_backend_get();
-    backend->draw_letter(pos_p, clip_area, font_p, letter, color, opa, blend_mode);
+    draw->draw_letter(draw, dsc, pos_p, letter);
 }
+
 
 /**********************
  *   STATIC FUNCTIONS
