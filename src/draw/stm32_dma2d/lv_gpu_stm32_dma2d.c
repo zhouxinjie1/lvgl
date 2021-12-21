@@ -93,11 +93,14 @@ void lv_draw_stm32_dma2d_init(void)
 
 void lv_draw_stm32_dma2d_ctx_init(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx)
 {
+
+    lv_draw_sw_init_ctx(drv, draw_ctx);
+
     lv_draw_stm32_dma2d_ctx_t * dma2d_draw_ctx = (lv_draw_sw_ctx_t *)draw_ctx;
 
-    dma2d_draw_ctx->blend = lv_draw_stm32_dma2d_blend;
-    dma2d_draw_ctx->base_draw.draw_img_decoded = lv_draw_stm32_dma2d_img_decoded;
-    dma2d_draw_ctx->base_draw.wait_for_finish = lv_gpu_stm32_dma2d_wait_cb;
+//    dma2d_draw_ctx->blend = lv_draw_stm32_dma2d_blend;
+//    dma2d_draw_ctx->base_draw.draw_img_decoded = lv_draw_stm32_dma2d_img_decoded;
+//    dma2d_draw_ctx->base_draw.wait_for_finish = lv_gpu_stm32_dma2d_wait_cb;
 
 }
 

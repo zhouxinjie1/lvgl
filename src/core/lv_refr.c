@@ -556,6 +556,7 @@ static void lv_refr_area(const lv_area_t * area_p)
         sub_area.y2 = row + max_row - 1;
         draw_ctx->buf_area = &sub_area;
         draw_ctx->clip_area = &sub_area;
+        draw_ctx->buf = disp_refr->driver->draw_buf->buf_act;
         if(sub_area.y2 > y2) sub_area.y2 = y2;
         row_last = sub_area.y2;
         if(y2 == row_last) disp_refr->driver->draw_buf->last_part = 1;
@@ -571,6 +572,7 @@ static void lv_refr_area(const lv_area_t * area_p)
         sub_area.y2 = y2;
         draw_ctx->buf_area = &sub_area;
         draw_ctx->clip_area = &sub_area;
+        draw_ctx->buf = disp_refr->driver->draw_buf->buf_act;
         disp_refr->driver->draw_buf->last_part = 1;
         lv_refr_area_part(draw_ctx);
     }

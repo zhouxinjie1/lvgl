@@ -98,8 +98,6 @@ void lv_draw_sw_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc_t * d
     /*Do not draw transparent things*/
     if(dsc->opa <= LV_OPA_MIN) return;
 
-    if(dsc->mask && dsc->mask_res == LV_DRAW_MASK_RES_TRANSP) return;
-
     lv_area_t blend_area;
     if(!_lv_area_intersect(&blend_area, dsc->blend_area, draw_ctx->clip_area)) return;
 
@@ -112,6 +110,7 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_blend_basic(lv_draw_ctx_t * draw_ctx, cons
 {
     const lv_opa_t * mask;
     if(dsc->mask == NULL) mask = NULL;
+    if(dsc->mask && dsc->mask_res == LV_DRAW_MASK_RES_TRANSP) return;
     else if(dsc->mask_res == LV_DRAW_MASK_RES_FULL_COVER) mask = NULL;
     else mask = dsc->mask;
 
