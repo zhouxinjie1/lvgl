@@ -15,8 +15,10 @@
 #include "../lv_draw_img.h"
 #include "../lv_draw_label.h"
 #include "../lv_draw_mask.h"
+#include "../../core/lv_refr.h"
 #include "lv_draw_sdl_utils.h"
 #include "lv_draw_sdl_texture_cache.h"
+#include "lv_draw_sdl_composite.h"
 #include "lv_draw_sdl_mask.h"
 #include "lv_draw_sdl_stack_blur.h"
 
@@ -122,9 +124,26 @@ void lv_draw_sdl_draw_rect(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * 
         extension.y1 = LV_MAX(extension.y1, ext);
         extension.y2 = LV_MAX(extension.y2, ext);
     }
+    if(dsc->blend_mode == LV_BLEND_MODE_REPLACE) {
+        /* Remove all pixels for draw area first */
+        SDL_Rect re_coords, re_clip, re_area;
+        lv_area_to_sdl_rect(coords, &re_coords);
+        lv_area_to_sdl_rect(clip, &re_clip);
+        re_coords.x -= extension.x1;
+        re_coords.w += extension.x1 + extension.x2;
+        re_coords.y -= extension.y1;
+        re_coords.h += extension.y1 + extension.y2;
+        SDL_IntersectRect(&re_coords, &re_clip, &re_area);
+        SDL_Color bg_color;
+        lv_color_to_sdl_color(&dsc->bg_color, &bg_color);
+        SDL_SetRenderDrawColor(ctx->renderer, bg_color.r, bg_color.g, bg_color.b, dsc->bg_opa);
+        SDL_SetRenderDrawBlendMode(ctx->renderer, SDL_BLENDMODE_NONE);
+        SDL_RenderFillRect(ctx->renderer, &re_area);
+    }
     /* Coords will be translated so coords will start at (0,0) */
     lv_area_t t_coords = *coords, t_clip = *clip, apply_area, t_area;
-    bool has_mask = lv_draw_sdl_mask_begin(ctx, coords, clip, &extension, &t_coords, &t_clip, &apply_area);
+    bool has_mask = lv_draw_sdl_composite_begin(ctx, coords, clip, &extension, dsc->blend_mode, &t_coords, &t_clip,
+                                                &apply_area);
     bool has_content = _lv_area_intersect(&t_area, &t_coords, &t_clip);
 
     SDL_Rect clip_rect;
@@ -138,9 +157,7 @@ void lv_draw_sdl_draw_rect(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * 
     }
     draw_outline(ctx, &t_coords, &t_clip, dsc);
 
-    if(has_mask) {
-        lv_draw_sdl_mask_end(ctx, &apply_area);
-    }
+    lv_draw_sdl_composite_end(ctx, &apply_area, dsc->blend_mode);
 }
 
 /**********************
@@ -150,7 +167,9 @@ void lv_draw_sdl_draw_rect(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * 
 static void draw_bg_color(lv_draw_sdl_ctx_t * ctx, const lv_area_t * coords, const lv_area_t * draw_area,
                           const lv_draw_rect_dsc_t * dsc)
 {
-    if(dsc->bg_opa <= LV_OPA_TRANSP) return;
+    if(dsc->bg_opa == 0) {
+        return;
+    }
     SDL_Color bg_color;
     lv_color_to_sdl_color(&dsc->bg_color, &bg_color);
     lv_coord_t radius = dsc->radius;
@@ -626,7 +645,6 @@ static void frag_render_center(SDL_Renderer * renderer, SDL_Texture * frag, lv_c
                                const lv_area_t * coords,
                                const lv_area_t * clipped, bool full)
 {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 80);
     lv_area_t center_area = {
         coords->x1 + frag_size,
         coords->y1 + frag_size,
@@ -648,7 +666,6 @@ static void frag_render_center(SDL_Renderer * renderer, SDL_Texture * frag, lv_c
         SDL_Rect src_rect = {frag_size - 1, frag_size - 1, 1, 1};
         SDL_RenderCopy(renderer, frag, &src_rect, &dst_rect);
     }
-    //    SDL_RenderDrawRect(renderer, &dst_rect);
 }
 
 static lv_draw_rect_bg_key_t rect_bg_key_create(lv_coord_t radius, lv_coord_t size)

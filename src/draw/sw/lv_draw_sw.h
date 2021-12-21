@@ -39,7 +39,6 @@ typedef struct {
  * GLOBAL PROTOTYPES
  **********************/
 
-void lv_draw_sw_init(void);
 void lv_draw_sw_init_ctx(struct _lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx);
 void lv_draw_sw_deinit_ctx(struct _lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx);
 
@@ -58,7 +57,7 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_line(struct _lv_draw_ctx_t * draw_ctx, con
                                            const lv_point_t * point1, const lv_point_t * point2);
 
 void lv_draw_sw_polygon(struct _lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * draw_dsc,
-                        const lv_point_t points[], uint16_t point_cnt);
+                        const lv_point_t * points, uint16_t point_cnt);
 
 /***********************
  * GLOBAL VARIABLES
