@@ -15,6 +15,7 @@ extern "C" {
  *********************/
 #include "../../misc/lv_color.h"
 #include "../../hal/lv_hal_disp.h"
+#include "../sw/lv_draw_sw.h"
 
 #if LV_USE_GPU_STM32_DMA2D
 
@@ -31,6 +32,9 @@ extern "C" {
 /**********************
  *      TYPEDEFS
  **********************/
+typedef lv_draw_sw_ctx_t lv_draw_stm32_dma2d_ctx_t;
+
+struct _lv_disp_drv_t;
 
 /**********************
  * GLOBAL PROTOTYPES
@@ -41,10 +45,13 @@ extern "C" {
  */
 void lv_draw_stm32_dma2d_init(void);
 
-void lv_draw_stm32_dma2d_ctx_init(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx);
+void lv_draw_stm32_dma2d_ctx_init(struct _lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx);
 
-void lv_draw_stm32_dma2d_ctx_deinit(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx);
+void lv_draw_stm32_dma2d_ctx_deinit(struct _lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx);
 
+void lv_draw_stm32_dma2d_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc_t * dsc);
+
+void lv_gpu_stm32_dma2d_wait_cb(lv_draw_ctx_t * draw_ctx);
 
 /**********************
  *      MACROS

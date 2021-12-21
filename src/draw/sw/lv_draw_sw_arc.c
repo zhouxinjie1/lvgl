@@ -10,6 +10,7 @@
 #include "../../misc/lv_math.h"
 #include "../../misc/lv_log.h"
 #include "../../misc/lv_mem.h"
+#include "../lv_draw.h"
 
 /*********************
  *      DEFINES

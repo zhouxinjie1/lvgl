@@ -16,7 +16,7 @@ extern "C" {
 #include "../../misc/lv_color.h"
 #include "../../misc/lv_area.h"
 #include "../../misc/lv_style.h"
-#include "../lv_draw.h"
+#include "../lv_draw_mask.h"
 
 /*********************
  *      DEFINES
@@ -38,6 +38,7 @@ typedef struct {
     lv_blend_mode_t blend_mode;     /**< E.g. LV_BLEND_MODE_ADDITIVE*/
 } lv_draw_sw_blend_dsc_t;
 
+struct _lv_draw_ctx_t;
 
 /**********************
  * GLOBAL PROTOTYPES
@@ -48,14 +49,14 @@ typedef struct {
  * @param draw_ctx      pointer to a draw context
  * @param dsc           pointer to an initialized blend descriptor
  */
-void lv_draw_sw_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc_t * dsc);
+void lv_draw_sw_blend(struct _lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc_t * dsc);
 
 /**
  * The basic blend function used with software rendering.
  * @param draw_ctx      pointer to a draw context
  * @param dsc           pointer to an initialized blend descriptor
  */
-LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_blend_basic(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc_t * dsc);
+LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_blend_basic(struct _lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc_t * dsc);
 
 /**********************
  *      MACROS

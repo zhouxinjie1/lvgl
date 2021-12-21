@@ -27,7 +27,7 @@
 #include <string.h>
 
 #if LV_USE_GPU_STM32_DMA2D
-    #include "../gpu/lv_gpu_stm32_dma2d.h"
+    #include "../draw/stm32_dma2d/lv_gpu_stm32_dma2d.h"
 #endif
 
 #if LV_USE_GPU_NXP_PXP && LV_USE_GPU_NXP_PXP_AUTO_INIT

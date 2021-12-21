@@ -95,16 +95,23 @@ static inline lv_color_t color_blend_true_color_replace(lv_color_t fg, lv_color_
 
 void lv_draw_sw_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc_t * dsc)
 {
+    /*Do not draw transparent things*/
+    if(dsc->opa <= LV_OPA_MIN) return;
+
+    if(dsc->mask && dsc->mask_res == LV_DRAW_MASK_RES_TRANSP) return;
+
+    lv_area_t blend_area;
+    if(!_lv_area_intersect(&blend_area, dsc->blend_area, draw_ctx->clip_area)) return;
+
+    if(draw_ctx->wait_for_finish) draw_ctx->wait_for_finish(draw_ctx);
+
     ((lv_draw_sw_ctx_t *)draw_ctx)->blend(draw_ctx, dsc);
 }
 
 LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_blend_basic(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc_t * dsc)
 {
-    /*Do not draw transparent things*/
-    if(dsc->opa <= LV_OPA_MIN) return;
     const lv_opa_t * mask;
     if(dsc->mask == NULL) mask = NULL;
-    else if(dsc->mask_res == LV_DRAW_MASK_RES_TRANSP) return;
     else if(dsc->mask_res == LV_DRAW_MASK_RES_FULL_COVER) mask = NULL;
     else mask = dsc->mask;
 
@@ -140,7 +147,6 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_blend_basic(lv_draw_ctx_t * draw_ctx, cons
 
     lv_area_move(&blend_area, -draw_ctx->buf_area->x1, -draw_ctx->buf_area->y1);
 
-    if(draw_ctx->wait_for_finish) draw_ctx->wait_for_finish(draw_ctx);
 
     if(disp->driver->set_px_cb) {
         if(dsc->src_buf == NULL) {

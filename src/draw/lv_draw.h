@@ -108,7 +108,6 @@ void lv_draw_init(void);
 /**********************
  *   POST INCLUDES
  *********************/
-#include "sw/lv_draw_sw.h"
 
 #ifdef __cplusplus
 } /*extern "C"*/
