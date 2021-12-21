@@ -151,13 +151,13 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_label(lv_draw_ctx_t * draw_ctx, const lv_draw
         pos.y += hint->y;
     }
 
-    uint32_t line_end = line_start + _lv_txt_get_next_line(&txt[line_start], font, dsc->letter_space, w,NULL, dsc->flag);
+    uint32_t line_end = line_start + _lv_txt_get_next_line(&txt[line_start], font, dsc->letter_space, w, NULL, dsc->flag);
 
     /*Go the first visible line*/
     while(pos.y + line_height_font < draw_ctx->clip_area->y1) {
         /*Go to next line*/
         line_start = line_end;
-        line_end += _lv_txt_get_next_line(&txt[line_start], font, dsc->letter_space, w, NULL,dsc->flag);
+        line_end += _lv_txt_get_next_line(&txt[line_start], font, dsc->letter_space, w, NULL, dsc->flag);
         pos.y += line_height;
 
         /*Save at the threshold coordinate*/

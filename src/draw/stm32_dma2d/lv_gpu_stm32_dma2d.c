@@ -42,13 +42,15 @@
  *  STATIC PROTOTYPES
  **********************/
 
-static void lv_draw_stm32_dma2d_blend_fill(lv_color_t * dest_buf, lv_coord_t dest_stride, const lv_area_t * fill_area, lv_color_t color);
+static void lv_draw_stm32_dma2d_blend_fill(lv_color_t * dest_buf, lv_coord_t dest_stride, const lv_area_t * fill_area,
+                                           lv_color_t color);
 
 
 static void lv_draw_stm32_dma2d_blend_map(lv_color_t * dest_buf, const lv_area_t * dest_area, lv_coord_t dest_stride,
-                                    const lv_color_t * src_buf, lv_coord_t src_stride, lv_opa_t opa);
+                                          const lv_color_t * src_buf, lv_coord_t src_stride, lv_opa_t opa);
 
-static void lv_draw_stm32_dma2d_img_decoded(lv_draw_ctx_t * draw, const lv_draw_img_dsc_t * dsc, const lv_area_t * coords, const uint8_t * map_p, lv_img_cf_t color_format);
+static void lv_draw_stm32_dma2d_img_decoded(lv_draw_ctx_t * draw, const lv_draw_img_dsc_t * dsc,
+                                            const lv_area_t * coords, const uint8_t * map_p, lv_img_cf_t color_format);
 
 
 static void invalidate_cache(void);
@@ -99,7 +101,7 @@ void lv_draw_stm32_dma2d_ctx_init(lv_disp_drv_t * drv, lv_draw_ctx_t * draw_ctx)
     lv_draw_stm32_dma2d_ctx_t * dma2d_draw_ctx = (lv_draw_sw_ctx_t *)draw_ctx;
 
     dma2d_draw_ctx->blend = lv_draw_stm32_dma2d_blend;
-//    dma2d_draw_ctx->base_draw.draw_img_decoded = lv_draw_stm32_dma2d_img_decoded;
+    //    dma2d_draw_ctx->base_draw.draw_img_decoded = lv_draw_stm32_dma2d_img_decoded;
     dma2d_draw_ctx->base_draw.wait_for_finish = lv_gpu_stm32_dma2d_wait_cb;
 
 }
@@ -134,7 +136,7 @@ void lv_draw_stm32_dma2d_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_
             lv_draw_stm32_dma2d_blend_map(dest_buf, &blend_area, dest_stride, src_buf, src_stride, dsc->opa);
             done = true;
         }
-        else if (dsc->opa >= LV_OPA_MAX){
+        else if(dsc->opa >= LV_OPA_MAX) {
             lv_area_move(&blend_area, -draw_ctx->buf_area->x1, -draw_ctx->buf_area->y1);
             lv_draw_stm32_dma2d_blend_fill(dest_buf, dest_stride, &blend_area, dsc->color);
             done = true;
@@ -145,14 +147,16 @@ void lv_draw_stm32_dma2d_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_
 }
 
 
-static void lv_draw_stm32_dma2d_img_decoded(lv_draw_ctx_t * draw_ctx, const lv_draw_img_dsc_t * dsc, const lv_area_t * coords, const uint8_t * map_p, lv_img_cf_t color_format)
+static void lv_draw_stm32_dma2d_img_decoded(lv_draw_ctx_t * draw_ctx, const lv_draw_img_dsc_t * dsc,
+                                            const lv_area_t * coords, const uint8_t * map_p, lv_img_cf_t color_format)
 {
     /*TODO basic ARGB8888 image can be handles here*/
 
     lv_draw_sw_img_decoded(draw_ctx, dsc, coords, map_p, color_format);
 }
 
-static void lv_draw_stm32_dma2d_blend_fill(lv_color_t * dest_buf, lv_coord_t dest_stride, const lv_area_t * fill_area,  lv_color_t color)
+static void lv_draw_stm32_dma2d_blend_fill(lv_color_t * dest_buf, lv_coord_t dest_stride, const lv_area_t * fill_area,
+                                           lv_color_t color)
 {
     /*Simply fill an area*/
     int32_t area_w = lv_area_get_width(fill_area);
@@ -173,7 +177,7 @@ static void lv_draw_stm32_dma2d_blend_fill(lv_color_t * dest_buf, lv_coord_t des
 
 
 static void lv_draw_stm32_dma2d_blend_map(lv_color_t * dest_buf, const lv_area_t * dest_area, lv_coord_t dest_stride,
-                                    const lv_color_t * src_buf, lv_coord_t src_stride, lv_opa_t opa)
+                                          const lv_color_t * src_buf, lv_coord_t src_stride, lv_opa_t opa)
 {
 
     /*Simple copy*/
@@ -193,7 +197,8 @@ static void lv_draw_stm32_dma2d_blend_map(lv_color_t * dest_buf, const lv_area_t
 
         /*start transfer*/
         DMA2D->CR |= DMA2D_CR_START_Msk;
-    } else {
+    }
+    else {
         DMA2D->CR = 0x20000;
 
         DMA2D->BGPFCCR = LV_DMA2D_COLOR_FORMAT;
@@ -201,10 +206,10 @@ static void lv_draw_stm32_dma2d_blend_map(lv_color_t * dest_buf, const lv_area_t
         DMA2D->BGOR = dest_stride - dest_w;
 
         DMA2D->FGPFCCR = (uint32_t)LV_DMA2D_COLOR_FORMAT
-                /*alpha mode 2, replace with foreground * alpha value*/
-                | (2 << DMA2D_FGPFCCR_AM_Pos)
-                /*alpha value*/
-                | (opa << DMA2D_FGPFCCR_ALPHA_Pos);
+                         /*alpha mode 2, replace with foreground * alpha value*/
+                         | (2 << DMA2D_FGPFCCR_AM_Pos)
+                         /*alpha value*/
+                         | (opa << DMA2D_FGPFCCR_ALPHA_Pos);
         DMA2D->FGMAR = (uint32_t)src_buf;
         DMA2D->FGOR = src_stride - dest_w;
 
