@@ -725,7 +725,7 @@ lv_img_dsc_t img_lv_demo_music_cover_2 = {
   .header.w = 176,
   .header.h = 175,
   .data_size = 30800 * LV_COLOR_SIZE / 8,
-  .header.cf = LV_IMG_CF_TRUE_COLOR,
+  .header.cf = LV_IMG_CF_RGB,
   .data = img_lv_demo_music_cover_2_map,
 };
 

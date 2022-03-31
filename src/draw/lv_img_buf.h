@@ -62,20 +62,27 @@ enum {
     LV_IMG_CF_RAW_CHROMA_KEYED, /**< Contains the file as it is. The image is chroma keyed. Needs
                                    custom decoder function*/
 
-    LV_IMG_CF_TRUE_COLOR,              /**< Color format and depth should match with LV_COLOR settings*/
-    LV_IMG_CF_TRUE_COLOR_ALPHA,        /**< Same as `LV_IMG_CF_TRUE_COLOR` but every pixel has an alpha byte*/
-    LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED, /**< Same as `LV_IMG_CF_TRUE_COLOR` but LV_COLOR_TRANSP pixels
+    LV_IMG_CF_RGB,              /**< Color format and depth should match with LV_COLOR settings*/
+    LV_IMG_CF_RGBA,        /**< Same as `LV_IMG_CF_TRUE_COLOR` but every pixel has an alpha byte*/
+    LV_IMG_CF_RGB_CHK, /**< Same as `LV_IMG_CF_TRUE_COLOR` but LV_COLOR_TRANSP pixels
                                           will be transparent*/
 
-    LV_IMG_CF_INDEXED_1BIT, /**< Can have 2 different colors in a palette (can't be chroma keyed)*/
-    LV_IMG_CF_INDEXED_2BIT, /**< Can have 4 different colors in a palette (can't be chroma keyed)*/
-    LV_IMG_CF_INDEXED_4BIT, /**< Can have 16 different colors in a palette (can't be chroma keyed)*/
-    LV_IMG_CF_INDEXED_8BIT, /**< Can have 256 different colors in a palette (can't be chroma keyed)*/
+    LV_IMG_CF_I1, /**< Can have 2 different colors in a palette (can't be chroma keyed)*/
+    LV_IMG_CF_I2, /**< Can have 4 different colors in a palette (can't be chroma keyed)*/
+    LV_IMG_CF_I4, /**< Can have 16 different colors in a palette (can't be chroma keyed)*/
+    LV_IMG_CF_I8, /**< Can have 256 different colors in a palette (can't be chroma keyed)*/
 
-    LV_IMG_CF_ALPHA_1BIT, /**< Can have one color and it can be drawn or not*/
-    LV_IMG_CF_ALPHA_2BIT, /**< Can have one color but 4 different alpha value*/
-    LV_IMG_CF_ALPHA_4BIT, /**< Can have one color but 16 different alpha value*/
-    LV_IMG_CF_ALPHA_8BIT, /**< Can have one color but 256 different alpha value*/
+    LV_IMG_CF_A1, /**< Can have one color and it can be drawn or not*/
+    LV_IMG_CF_A2, /**< Can have one color but 4 different alpha value*/
+    LV_IMG_CF_A4, /**< Can have one color but 16 different alpha value*/
+    LV_IMG_CF_A8, /**< Can have one color but 256 different alpha value*/
+
+    LV_IMG_CF_RGB888,
+    LV_IMG_CF_RGBA8888,
+    LV_IMG_CF_RGBX8888,
+    LV_IMG_CF_RGB565,
+    LV_IMG_CF_RGBA5658,
+    LV_IMG_CF_RGB565A8,
 
     LV_IMG_CF_RESERVED_15,              /**< Reserved for further use.*/
     LV_IMG_CF_RESERVED_16,              /**< Reserved for further use.*/

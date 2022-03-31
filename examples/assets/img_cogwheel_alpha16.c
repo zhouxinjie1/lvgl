@@ -118,7 +118,7 @@ const lv_img_dsc_t img_cogwheel_alpha16 = {
   .header.w = 100,
   .header.h = 100,
   .data_size = 5000,
-  .header.cf = LV_IMG_CF_ALPHA_4BIT,
+  .header.cf = LV_IMG_CF_A4,
   .data = img_cogwheel_alpha16_map,
 };
 

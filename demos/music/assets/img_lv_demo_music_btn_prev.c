@@ -272,7 +272,7 @@ lv_img_dsc_t img_lv_demo_music_btn_prev = {
   .header.w = 62,
   .header.h = 62,
   .data_size = 3844 * LV_IMG_PX_SIZE_ALPHA_BYTE,
-  .header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA,
+  .header.cf = LV_IMG_CF_RGBA,
   .data = img_lv_demo_music_btn_prev_map,
 };
 

@@ -46,11 +46,11 @@
 uint32_t lv_snapshot_buf_size_needed(lv_obj_t * obj, lv_img_cf_t cf)
 {
     switch(cf) {
-        case LV_IMG_CF_TRUE_COLOR_ALPHA:
-        case LV_IMG_CF_ALPHA_1BIT:
-        case LV_IMG_CF_ALPHA_2BIT:
-        case LV_IMG_CF_ALPHA_4BIT:
-        case LV_IMG_CF_ALPHA_8BIT:
+        case LV_IMG_CF_RGBA:
+        case LV_IMG_CF_A1:
+        case LV_IMG_CF_A2:
+        case LV_IMG_CF_A4:
+        case LV_IMG_CF_A8:
             break;
         default:
             return 0;
@@ -85,11 +85,11 @@ lv_res_t lv_snapshot_take_to_buf(lv_obj_t * obj, lv_img_cf_t cf, lv_img_dsc_t * 
     LV_ASSERT(buf);
 
     switch(cf) {
-        case LV_IMG_CF_TRUE_COLOR_ALPHA:
-        case LV_IMG_CF_ALPHA_1BIT:
-        case LV_IMG_CF_ALPHA_2BIT:
-        case LV_IMG_CF_ALPHA_4BIT:
-        case LV_IMG_CF_ALPHA_8BIT:
+        case LV_IMG_CF_RGBA:
+        case LV_IMG_CF_A1:
+        case LV_IMG_CF_A2:
+        case LV_IMG_CF_A4:
+        case LV_IMG_CF_A8:
             break;
         default:
             return LV_RES_INV;

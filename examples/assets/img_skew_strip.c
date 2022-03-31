@@ -110,7 +110,7 @@ const lv_img_dsc_t img_skew_strip = {
   .header.w = 80,
   .header.h = 20,
   .data_size = 1600 * LV_IMG_PX_SIZE_ALPHA_BYTE,
-  .header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA,
+  .header.cf = LV_IMG_CF_RGBA,
   .data = img_skew_strip_map,
 };
 

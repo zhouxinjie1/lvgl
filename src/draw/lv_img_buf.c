@@ -53,8 +53,8 @@ lv_color_t lv_img_buf_get_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t 
     lv_color_t p_color = lv_color_black();
     uint8_t * buf_u8 = (uint8_t *)dsc->data;
 
-    if(dsc->header.cf == LV_IMG_CF_TRUE_COLOR || dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED ||
-       dsc->header.cf == LV_IMG_CF_TRUE_COLOR_ALPHA) {
+    if(dsc->header.cf == LV_IMG_CF_RGB || dsc->header.cf == LV_IMG_CF_RGB_CHK ||
+       dsc->header.cf == LV_IMG_CF_RGBA) {
         uint8_t px_size = lv_img_cf_get_px_size(dsc->header.cf) >> 3;
         uint32_t px     = dsc->header.w * y * px_size + x * px_size;
         lv_memcpy_small(&p_color, &buf_u8[px], sizeof(lv_color_t));
@@ -62,7 +62,7 @@ lv_color_t lv_img_buf_get_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t 
         p_color.ch.alpha = 0xFF; /*Only the color should be get so use a default alpha value*/
 #endif
     }
-    else if(dsc->header.cf == LV_IMG_CF_INDEXED_1BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_I1) {
         buf_u8 += 4 * 2;
         uint8_t bit = x & 0x7;
         x           = x >> 3;
@@ -73,7 +73,7 @@ lv_color_t lv_img_buf_get_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t 
         uint32_t px  = ((dsc->header.w + 7) >> 3) * y + x;
         p_color.full = (buf_u8[px] & (1 << (7 - bit))) >> (7 - bit);
     }
-    else if(dsc->header.cf == LV_IMG_CF_INDEXED_2BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_I2) {
         buf_u8 += 4 * 4;
         uint8_t bit = (x & 0x3) * 2;
         x           = x >> 2;
@@ -84,7 +84,7 @@ lv_color_t lv_img_buf_get_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t 
         uint32_t px  = ((dsc->header.w + 3) >> 2) * y + x;
         p_color.full = (buf_u8[px] & (3 << (6 - bit))) >> (6 - bit);
     }
-    else if(dsc->header.cf == LV_IMG_CF_INDEXED_4BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_I4) {
         buf_u8 += 4 * 16;
         uint8_t bit = (x & 0x1) * 4;
         x           = x >> 1;
@@ -95,13 +95,13 @@ lv_color_t lv_img_buf_get_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t 
         uint32_t px  = ((dsc->header.w + 1) >> 1) * y + x;
         p_color.full = (buf_u8[px] & (0xF << (4 - bit))) >> (4 - bit);
     }
-    else if(dsc->header.cf == LV_IMG_CF_INDEXED_8BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_I8) {
         buf_u8 += 4 * 256;
         uint32_t px  = dsc->header.w * y + x;
         p_color.full = buf_u8[px];
     }
-    else if(dsc->header.cf == LV_IMG_CF_ALPHA_1BIT || dsc->header.cf == LV_IMG_CF_ALPHA_2BIT ||
-            dsc->header.cf == LV_IMG_CF_ALPHA_4BIT || dsc->header.cf == LV_IMG_CF_ALPHA_8BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_A1 || dsc->header.cf == LV_IMG_CF_A2 ||
+            dsc->header.cf == LV_IMG_CF_A4 || dsc->header.cf == LV_IMG_CF_A8) {
         p_color = color;
     }
     return p_color;
@@ -119,11 +119,11 @@ lv_opa_t lv_img_buf_get_px_alpha(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y)
 {
     uint8_t * buf_u8 = (uint8_t *)dsc->data;
 
-    if(dsc->header.cf == LV_IMG_CF_TRUE_COLOR_ALPHA) {
+    if(dsc->header.cf == LV_IMG_CF_RGBA) {
         uint32_t px = dsc->header.w * y * LV_IMG_PX_SIZE_ALPHA_BYTE + x * LV_IMG_PX_SIZE_ALPHA_BYTE;
         return buf_u8[px + LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
     }
-    else if(dsc->header.cf == LV_IMG_CF_ALPHA_1BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_A1) {
         uint8_t bit = x & 0x7;
         x           = x >> 3;
 
@@ -134,7 +134,7 @@ lv_opa_t lv_img_buf_get_px_alpha(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y)
         uint8_t px_opa = (buf_u8[px] & (1 << (7 - bit))) >> (7 - bit);
         return px_opa ? LV_OPA_TRANSP : LV_OPA_COVER;
     }
-    else if(dsc->header.cf == LV_IMG_CF_ALPHA_2BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_A2) {
         const uint8_t opa_table[4] = {0, 85, 170, 255}; /*Opacity mapping with bpp = 2*/
 
         uint8_t bit = (x & 0x3) * 2;
@@ -147,7 +147,7 @@ lv_opa_t lv_img_buf_get_px_alpha(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y)
         uint8_t px_opa = (buf_u8[px] & (3 << (6 - bit))) >> (6 - bit);
         return opa_table[px_opa];
     }
-    else if(dsc->header.cf == LV_IMG_CF_ALPHA_4BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_A4) {
         const uint8_t opa_table[16] = {0,  17, 34,  51, /*Opacity mapping with bpp = 4*/
                                        68, 85, 102, 119, 136, 153, 170, 187, 204, 221, 238, 255
                                       };
@@ -162,7 +162,7 @@ lv_opa_t lv_img_buf_get_px_alpha(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y)
         uint8_t px_opa = (buf_u8[px] & (0xF << (4 - bit))) >> (4 - bit);
         return opa_table[px_opa];
     }
-    else if(dsc->header.cf == LV_IMG_CF_ALPHA_8BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_A8) {
         uint32_t px = dsc->header.w * y + x;
         return buf_u8[px];
     }
@@ -182,12 +182,12 @@ void lv_img_buf_set_px_alpha(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_
 {
     uint8_t * buf_u8 = (uint8_t *)dsc->data;
 
-    if(dsc->header.cf == LV_IMG_CF_TRUE_COLOR_ALPHA) {
+    if(dsc->header.cf == LV_IMG_CF_RGBA) {
         uint8_t px_size          = lv_img_cf_get_px_size(dsc->header.cf) >> 3;
         uint32_t px              = dsc->header.w * y * px_size + x * px_size;
         buf_u8[px + px_size - 1] = opa;
     }
-    else if(dsc->header.cf == LV_IMG_CF_ALPHA_1BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_A1) {
         opa         = opa >> 7; /*opa -> [0,1]*/
         uint8_t bit = x & 0x7;
         x           = x >> 3;
@@ -199,7 +199,7 @@ void lv_img_buf_set_px_alpha(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_
         buf_u8[px]  = buf_u8[px] & ~(1 << (7 - bit));
         buf_u8[px]  = buf_u8[px] | ((opa & 0x1) << (7 - bit));
     }
-    else if(dsc->header.cf == LV_IMG_CF_ALPHA_2BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_A2) {
         opa         = opa >> 6; /*opa -> [0,3]*/
         uint8_t bit = (x & 0x3) * 2;
         x           = x >> 2;
@@ -211,7 +211,7 @@ void lv_img_buf_set_px_alpha(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_
         buf_u8[px]  = buf_u8[px] & ~(3 << (6 - bit));
         buf_u8[px]  = buf_u8[px] | ((opa & 0x3) << (6 - bit));
     }
-    else if(dsc->header.cf == LV_IMG_CF_ALPHA_4BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_A4) {
         opa         = opa >> 4; /*opa -> [0,15]*/
         uint8_t bit = (x & 0x1) * 4;
         x           = x >> 1;
@@ -223,7 +223,7 @@ void lv_img_buf_set_px_alpha(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_
         buf_u8[px]  = buf_u8[px] & ~(0xF << (4 - bit));
         buf_u8[px]  = buf_u8[px] | ((opa & 0xF) << (4 - bit));
     }
-    else if(dsc->header.cf == LV_IMG_CF_ALPHA_8BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_A8) {
         uint32_t px = dsc->header.w * y + x;
         buf_u8[px]  = opa;
     }
@@ -241,17 +241,17 @@ void lv_img_buf_set_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_
 {
     uint8_t * buf_u8 = (uint8_t *)dsc->data;
 
-    if(dsc->header.cf == LV_IMG_CF_TRUE_COLOR || dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED) {
+    if(dsc->header.cf == LV_IMG_CF_RGB || dsc->header.cf == LV_IMG_CF_RGB_CHK) {
         uint8_t px_size = lv_img_cf_get_px_size(dsc->header.cf) >> 3;
         uint32_t px     = dsc->header.w * y * px_size + x * px_size;
         lv_memcpy_small(&buf_u8[px], &c, px_size);
     }
-    else if(dsc->header.cf == LV_IMG_CF_TRUE_COLOR_ALPHA) {
+    else if(dsc->header.cf == LV_IMG_CF_RGBA) {
         uint8_t px_size = lv_img_cf_get_px_size(dsc->header.cf) >> 3;
         uint32_t px     = dsc->header.w * y * px_size + x * px_size;
         lv_memcpy_small(&buf_u8[px], &c, px_size - 1); /*-1 to not overwrite the alpha value*/
     }
-    else if(dsc->header.cf == LV_IMG_CF_INDEXED_1BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_I1) {
         buf_u8 += sizeof(lv_color32_t) * 2; /*Skip the palette*/
 
         uint8_t bit = x & 0x7;
@@ -264,7 +264,7 @@ void lv_img_buf_set_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_
         buf_u8[px]  = buf_u8[px] & ~(1 << (7 - bit));
         buf_u8[px]  = buf_u8[px] | ((c.full & 0x1) << (7 - bit));
     }
-    else if(dsc->header.cf == LV_IMG_CF_INDEXED_2BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_I2) {
         buf_u8 += sizeof(lv_color32_t) * 4; /*Skip the palette*/
         uint8_t bit = (x & 0x3) * 2;
         x           = x >> 2;
@@ -277,7 +277,7 @@ void lv_img_buf_set_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_
         buf_u8[px] = buf_u8[px] & ~(3 << (6 - bit));
         buf_u8[px] = buf_u8[px] | ((c.full & 0x3) << (6 - bit));
     }
-    else if(dsc->header.cf == LV_IMG_CF_INDEXED_4BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_I4) {
         buf_u8 += sizeof(lv_color32_t) * 16; /*Skip the palette*/
         uint8_t bit = (x & 0x1) * 4;
         x           = x >> 1;
@@ -289,7 +289,7 @@ void lv_img_buf_set_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_
         buf_u8[px]  = buf_u8[px] & ~(0xF << (4 - bit));
         buf_u8[px]  = buf_u8[px] | ((c.full & 0xF) << (4 - bit));
     }
-    else if(dsc->header.cf == LV_IMG_CF_INDEXED_8BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_I8) {
         buf_u8 += sizeof(lv_color32_t) * 256; /*Skip the palette*/
         uint32_t px = dsc->header.w * y + x;
         buf_u8[px]  = c.full;
@@ -308,8 +308,8 @@ void lv_img_buf_set_px_color(lv_img_dsc_t * dsc, lv_coord_t x, lv_coord_t y, lv_
  */
 void lv_img_buf_set_palette(lv_img_dsc_t * dsc, uint8_t id, lv_color_t c)
 {
-    if((dsc->header.cf == LV_IMG_CF_ALPHA_1BIT && id > 1) || (dsc->header.cf == LV_IMG_CF_ALPHA_2BIT && id > 3) ||
-       (dsc->header.cf == LV_IMG_CF_ALPHA_4BIT && id > 15) || (dsc->header.cf == LV_IMG_CF_ALPHA_8BIT)) {
+    if((dsc->header.cf == LV_IMG_CF_A1 && id > 1) || (dsc->header.cf == LV_IMG_CF_A2 && id > 3) ||
+       (dsc->header.cf == LV_IMG_CF_A4 && id > 15) || (dsc->header.cf == LV_IMG_CF_A8)) {
         LV_LOG_WARN("lv_img_buf_set_px_alpha: invalid 'id'");
         return;
     }
@@ -383,27 +383,27 @@ void lv_img_buf_free(lv_img_dsc_t * dsc)
 uint32_t lv_img_buf_get_img_size(lv_coord_t w, lv_coord_t h, lv_img_cf_t cf)
 {
     switch(cf) {
-        case LV_IMG_CF_TRUE_COLOR:
+        case LV_IMG_CF_RGB:
             return LV_IMG_BUF_SIZE_TRUE_COLOR(w, h);
-        case LV_IMG_CF_TRUE_COLOR_ALPHA:
+        case LV_IMG_CF_RGBA:
             return LV_IMG_BUF_SIZE_TRUE_COLOR_ALPHA(w, h);
-        case LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED:
+        case LV_IMG_CF_RGB_CHK:
             return LV_IMG_BUF_SIZE_TRUE_COLOR_CHROMA_KEYED(w, h);
-        case LV_IMG_CF_ALPHA_1BIT:
+        case LV_IMG_CF_A1:
             return LV_IMG_BUF_SIZE_ALPHA_1BIT(w, h);
-        case LV_IMG_CF_ALPHA_2BIT:
+        case LV_IMG_CF_A2:
             return LV_IMG_BUF_SIZE_ALPHA_2BIT(w, h);
-        case LV_IMG_CF_ALPHA_4BIT:
+        case LV_IMG_CF_A4:
             return LV_IMG_BUF_SIZE_ALPHA_4BIT(w, h);
-        case LV_IMG_CF_ALPHA_8BIT:
+        case LV_IMG_CF_A8:
             return LV_IMG_BUF_SIZE_ALPHA_8BIT(w, h);
-        case LV_IMG_CF_INDEXED_1BIT:
+        case LV_IMG_CF_I1:
             return LV_IMG_BUF_SIZE_INDEXED_1BIT(w, h);
-        case LV_IMG_CF_INDEXED_2BIT:
+        case LV_IMG_CF_I2:
             return LV_IMG_BUF_SIZE_INDEXED_2BIT(w, h);
-        case LV_IMG_CF_INDEXED_4BIT:
+        case LV_IMG_CF_I4:
             return LV_IMG_BUF_SIZE_INDEXED_4BIT(w, h);
-        case LV_IMG_CF_INDEXED_8BIT:
+        case LV_IMG_CF_I8:
             return LV_IMG_BUF_SIZE_INDEXED_8BIT(w, h);
         default:
             return 0;
@@ -439,8 +439,8 @@ void _lv_img_buf_transform_init(lv_img_transform_dsc_t * dsc)
 
     dsc->tmp.chroma_keyed = lv_img_cf_is_chroma_keyed(dsc->cfg.cf) ? 1 : 0;
     dsc->tmp.has_alpha = lv_img_cf_has_alpha(dsc->cfg.cf) ? 1 : 0;
-    if(dsc->cfg.cf == LV_IMG_CF_TRUE_COLOR || dsc->cfg.cf == LV_IMG_CF_TRUE_COLOR_ALPHA ||
-       dsc->cfg.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED) {
+    if(dsc->cfg.cf == LV_IMG_CF_RGB || dsc->cfg.cf == LV_IMG_CF_RGBA ||
+       dsc->cfg.cf == LV_IMG_CF_RGB_CHK) {
         dsc->tmp.native_color = 1;
     }
     else {

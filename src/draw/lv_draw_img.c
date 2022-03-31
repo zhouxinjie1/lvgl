@@ -98,27 +98,27 @@ uint8_t lv_img_cf_get_px_size(lv_img_cf_t cf)
         case LV_IMG_CF_RAW:
             px_size = 0;
             break;
-        case LV_IMG_CF_TRUE_COLOR:
-        case LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED:
+        case LV_IMG_CF_RGB:
+        case LV_IMG_CF_RGB_CHK:
             px_size = LV_COLOR_SIZE;
             break;
-        case LV_IMG_CF_TRUE_COLOR_ALPHA:
+        case LV_IMG_CF_RGBA:
             px_size = LV_IMG_PX_SIZE_ALPHA_BYTE << 3;
             break;
-        case LV_IMG_CF_INDEXED_1BIT:
-        case LV_IMG_CF_ALPHA_1BIT:
+        case LV_IMG_CF_I1:
+        case LV_IMG_CF_A1:
             px_size = 1;
             break;
-        case LV_IMG_CF_INDEXED_2BIT:
-        case LV_IMG_CF_ALPHA_2BIT:
+        case LV_IMG_CF_I2:
+        case LV_IMG_CF_A2:
             px_size = 2;
             break;
-        case LV_IMG_CF_INDEXED_4BIT:
-        case LV_IMG_CF_ALPHA_4BIT:
+        case LV_IMG_CF_I4:
+        case LV_IMG_CF_A4:
             px_size = 4;
             break;
-        case LV_IMG_CF_INDEXED_8BIT:
-        case LV_IMG_CF_ALPHA_8BIT:
+        case LV_IMG_CF_I8:
+        case LV_IMG_CF_A8:
             px_size = 8;
             break;
         default:
@@ -139,7 +139,7 @@ bool lv_img_cf_is_chroma_keyed(lv_img_cf_t cf)
     bool is_chroma_keyed = false;
 
     switch(cf) {
-        case LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED:
+        case LV_IMG_CF_RGB_CHK:
         case LV_IMG_CF_RAW_CHROMA_KEYED:
             is_chroma_keyed = true;
             break;
@@ -162,16 +162,16 @@ bool lv_img_cf_has_alpha(lv_img_cf_t cf)
     bool has_alpha = false;
 
     switch(cf) {
-        case LV_IMG_CF_TRUE_COLOR_ALPHA:
+        case LV_IMG_CF_RGBA:
         case LV_IMG_CF_RAW_ALPHA:
-        case LV_IMG_CF_INDEXED_1BIT:
-        case LV_IMG_CF_INDEXED_2BIT:
-        case LV_IMG_CF_INDEXED_4BIT:
-        case LV_IMG_CF_INDEXED_8BIT:
-        case LV_IMG_CF_ALPHA_1BIT:
-        case LV_IMG_CF_ALPHA_2BIT:
-        case LV_IMG_CF_ALPHA_4BIT:
-        case LV_IMG_CF_ALPHA_8BIT:
+        case LV_IMG_CF_I1:
+        case LV_IMG_CF_I2:
+        case LV_IMG_CF_I4:
+        case LV_IMG_CF_I8:
+        case LV_IMG_CF_A1:
+        case LV_IMG_CF_A2:
+        case LV_IMG_CF_A4:
+        case LV_IMG_CF_A8:
             has_alpha = true;
             break;
         default:
@@ -238,9 +238,9 @@ LV_ATTRIBUTE_FAST_MEM static lv_res_t decode_and_draw(lv_draw_ctx_t * draw_ctx, 
 
 
     lv_img_cf_t cf;
-    if(lv_img_cf_is_chroma_keyed(cdsc->dec_dsc.header.cf)) cf = LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED;
-    else if(lv_img_cf_has_alpha(cdsc->dec_dsc.header.cf)) cf = LV_IMG_CF_TRUE_COLOR_ALPHA;
-    else cf = LV_IMG_CF_TRUE_COLOR;
+    if(lv_img_cf_is_chroma_keyed(cdsc->dec_dsc.header.cf)) cf = LV_IMG_CF_RGB_CHK;
+    else if(lv_img_cf_has_alpha(cdsc->dec_dsc.header.cf)) cf = LV_IMG_CF_RGBA;
+    else cf = LV_IMG_CF_RGB;
 
     if(cdsc->dec_dsc.error_msg != NULL) {
         LV_LOG_WARN("Image draw error");

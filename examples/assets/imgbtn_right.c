@@ -230,7 +230,7 @@ const lv_img_dsc_t imgbtn_right = {
   .header.w = 8,
   .header.h = 50,
   .data_size = 400 * LV_IMG_PX_SIZE_ALPHA_BYTE,
-  .header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA,
+  .header.cf = LV_IMG_CF_RGBA,
   .data = imgbtn_right_map,
 };
 

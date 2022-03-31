@@ -430,7 +430,7 @@ const lv_img_dsc_t img_cogwheel_rgb = {
   .header.w = 100,
   .header.h = 100,
   .data_size = 10000 * LV_COLOR_SIZE / 8,
-  .header.cf = LV_IMG_CF_TRUE_COLOR,
+  .header.cf = LV_IMG_CF_RGB,
   .data = img_cogwheel_rgb_map,
 };
 

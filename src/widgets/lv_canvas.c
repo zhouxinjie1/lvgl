@@ -527,12 +527,12 @@ void lv_canvas_fill_bg(lv_obj_t * canvas, lv_color_t color, lv_opa_t opa)
 
     lv_img_dsc_t * dsc = lv_canvas_get_img(canvas);
 
-    if(dsc->header.cf == LV_IMG_CF_INDEXED_1BIT) {
+    if(dsc->header.cf == LV_IMG_CF_I1) {
         uint32_t row_byte_cnt = (dsc->header.w + 7) >> 3;
         /*+8 skip the palette*/
         lv_memset((uint8_t *)dsc->data + 8, color.full ? 0xff : 0x00, row_byte_cnt * dsc->header.h);
     }
-    else if(dsc->header.cf == LV_IMG_CF_ALPHA_1BIT) {
+    else if(dsc->header.cf == LV_IMG_CF_A1) {
         uint32_t row_byte_cnt = (dsc->header.w + 7) >> 3;
         lv_memset((uint8_t *)dsc->data, opa > LV_OPA_50 ? 0xff : 0x00, row_byte_cnt * dsc->header.h);
     }
@@ -557,7 +557,7 @@ void lv_canvas_draw_rect(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y, lv_coord
 
     lv_img_dsc_t * dsc = lv_canvas_get_img(canvas);
 
-    if(dsc->header.cf >= LV_IMG_CF_INDEXED_1BIT && dsc->header.cf <= LV_IMG_CF_INDEXED_8BIT) {
+    if(dsc->header.cf >= LV_IMG_CF_I1 && dsc->header.cf <= LV_IMG_CF_I8) {
         LV_LOG_WARN("lv_canvas_draw_rect: can't draw to LV_IMG_CF_INDEXED canvas");
         return;
     }
@@ -574,7 +574,7 @@ void lv_canvas_draw_rect(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y, lv_coord
 
     /*Disable anti-aliasing if drawing with transparent color to chroma keyed canvas*/
     lv_color_t ctransp = LV_COLOR_CHROMA_KEY;
-    if(dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED &&
+    if(dsc->header.cf == LV_IMG_CF_RGB_CHK &&
        draw_dsc->bg_color.full == ctransp.full) {
         fake_disp.driver->antialiasing = 0;
     }
@@ -601,7 +601,7 @@ void lv_canvas_draw_text(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y, lv_coord
 
     lv_img_dsc_t * dsc = lv_canvas_get_img(canvas);
 
-    if(dsc->header.cf >= LV_IMG_CF_INDEXED_1BIT && dsc->header.cf <= LV_IMG_CF_INDEXED_8BIT) {
+    if(dsc->header.cf >= LV_IMG_CF_I1 && dsc->header.cf <= LV_IMG_CF_I8) {
         LV_LOG_WARN("lv_canvas_draw_text: can't draw to LV_IMG_CF_INDEXED canvas");
         return;
     }
@@ -637,7 +637,7 @@ void lv_canvas_draw_img(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y, const voi
 
     lv_img_dsc_t * dsc = lv_canvas_get_img(canvas);
 
-    if(dsc->header.cf >= LV_IMG_CF_INDEXED_1BIT && dsc->header.cf <= LV_IMG_CF_INDEXED_8BIT) {
+    if(dsc->header.cf >= LV_IMG_CF_I1 && dsc->header.cf <= LV_IMG_CF_I8) {
         LV_LOG_WARN("lv_canvas_draw_img: can't draw to LV_IMG_CF_INDEXED canvas");
         return;
     }
@@ -680,7 +680,7 @@ void lv_canvas_draw_line(lv_obj_t * canvas, const lv_point_t points[], uint32_t 
 
     lv_img_dsc_t * dsc = lv_canvas_get_img(canvas);
 
-    if(dsc->header.cf >= LV_IMG_CF_INDEXED_1BIT && dsc->header.cf <= LV_IMG_CF_INDEXED_8BIT) {
+    if(dsc->header.cf >= LV_IMG_CF_I1 && dsc->header.cf <= LV_IMG_CF_I8) {
         LV_LOG_WARN("lv_canvas_draw_line: can't draw to LV_IMG_CF_INDEXED canvas");
         return;
     }
@@ -698,7 +698,7 @@ void lv_canvas_draw_line(lv_obj_t * canvas, const lv_point_t points[], uint32_t 
 
     /*Disable anti-aliasing if drawing with transparent color to chroma keyed canvas*/
     lv_color_t ctransp = LV_COLOR_CHROMA_KEY;
-    if(dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED &&
+    if(dsc->header.cf == LV_IMG_CF_RGB_CHK &&
        draw_dsc->color.full == ctransp.full) {
         fake_disp.driver->antialiasing = 0;
     }
@@ -722,7 +722,7 @@ void lv_canvas_draw_polygon(lv_obj_t * canvas, const lv_point_t points[], uint32
 
     lv_img_dsc_t * dsc = lv_canvas_get_img(canvas);
 
-    if(dsc->header.cf >= LV_IMG_CF_INDEXED_1BIT && dsc->header.cf <= LV_IMG_CF_INDEXED_8BIT) {
+    if(dsc->header.cf >= LV_IMG_CF_I1 && dsc->header.cf <= LV_IMG_CF_I8) {
         LV_LOG_WARN("lv_canvas_draw_polygon: can't draw to LV_IMG_CF_INDEXED canvas");
         return;
     }
@@ -739,7 +739,7 @@ void lv_canvas_draw_polygon(lv_obj_t * canvas, const lv_point_t points[], uint32
 
     /*Disable anti-aliasing if drawing with transparent color to chroma keyed canvas*/
     lv_color_t ctransp = LV_COLOR_CHROMA_KEY;
-    if(dsc->header.cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED &&
+    if(dsc->header.cf == LV_IMG_CF_RGB_CHK &&
        draw_dsc->bg_color.full == ctransp.full) {
         fake_disp.driver->antialiasing = 0;
     }
@@ -761,7 +761,7 @@ void lv_canvas_draw_arc(lv_obj_t * canvas, lv_coord_t x, lv_coord_t y, lv_coord_
 
     lv_img_dsc_t * dsc = lv_canvas_get_img(canvas);
 
-    if(dsc->header.cf >= LV_IMG_CF_INDEXED_1BIT && dsc->header.cf <= LV_IMG_CF_INDEXED_8BIT) {
+    if(dsc->header.cf >= LV_IMG_CF_I1 && dsc->header.cf <= LV_IMG_CF_I8) {
         LV_LOG_WARN("lv_canvas_draw_arc: can't draw to LV_IMG_CF_INDEXED canvas");
         return;
     }
@@ -808,7 +808,7 @@ static void lv_canvas_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj
     lv_canvas_t * canvas = (lv_canvas_t *)obj;
 
     canvas->dsc.header.always_zero = 0;
-    canvas->dsc.header.cf          = LV_IMG_CF_TRUE_COLOR;
+    canvas->dsc.header.cf          = LV_IMG_CF_RGB;
     canvas->dsc.header.h           = 0;
     canvas->dsc.header.w           = 0;
     canvas->dsc.data_size          = 0;

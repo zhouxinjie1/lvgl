@@ -176,7 +176,7 @@ lv_img_dsc_t img_lv_demo_music_slider_knob = {
   .header.w = 36,
   .header.h = 38,
   .data_size = 1368 * LV_IMG_PX_SIZE_ALPHA_BYTE,
-  .header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA,
+  .header.cf = LV_IMG_CF_RGBA,
   .data = img_lv_demo_music_slider_knob_map,
 };
 

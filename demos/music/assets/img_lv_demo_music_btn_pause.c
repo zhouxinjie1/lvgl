@@ -332,7 +332,7 @@ lv_img_dsc_t img_lv_demo_music_btn_pause = {
   .header.w = 79,
   .header.h = 77,
   .data_size = 6083 * LV_IMG_PX_SIZE_ALPHA_BYTE,
-  .header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA,
+  .header.cf = LV_IMG_CF_RGBA,
   .data = img_lv_demo_music_btn_pause_map,
 };
 

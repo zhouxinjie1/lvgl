@@ -38,6 +38,32 @@
  *   GLOBAL FUNCTIONS
  **********************/
 
+static lv_img_transform_dsc_t trans_dsc;
+
+void tranform_cb(const lv_area_t * dest_area, lv_color_t * cbuf, lv_opa_t * abuf)
+{
+    lv_coord_t x;
+    lv_coord_t y;
+
+    for(y = dest_area->y1; y <= dest_area->y2; y++) {
+        for(x = dest_area->x1; x <= dest_area->x2; x++) {
+            bool ret = _lv_img_buf_transform(&trans_dsc, x, y);
+            if(ret) {
+                *cbuf = trans_dsc.res.color;
+                *abuf = trans_dsc.res.opa;
+            }
+            else {
+                *abuf = 0;
+            }
+            cbuf++;
+            abuf++;
+        }
+    }
+}
+
+
+
+
 LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_img_decoded(struct _lv_draw_ctx_t * draw_ctx, const lv_draw_img_dsc_t * draw_dsc,
                                                   const lv_area_t * coords, const uint8_t * src_buf, lv_img_cf_t cf)
 {
@@ -54,16 +80,15 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_img_decoded(struct _lv_draw_ctx_t * draw_c
 
     /*The simplest case just copy the pixels into the draw_buf*/
     if(!mask_any && draw_dsc->angle == 0 && draw_dsc->zoom == LV_IMG_ZOOM_NONE &&
-       cf == LV_IMG_CF_TRUE_COLOR && draw_dsc->recolor_opa == LV_OPA_TRANSP) {
+       cf == LV_IMG_CF_RGB && draw_dsc->recolor_opa == LV_OPA_TRANSP) {
         blend_dsc.blend_area = coords;
         blend_dsc.src_buf = (const lv_color_t *)src_buf;
         lv_draw_sw_blend(draw_ctx, &blend_dsc);
     }
     /*In the other cases every pixel need to be checked one-by-one*/
     else {
-        //#if LV_DRAW_COMPLEX
         /*The pixel size in byte is different if an alpha byte is added too*/
-        uint8_t px_size_byte = cf == LV_IMG_CF_TRUE_COLOR_ALPHA ? LV_IMG_PX_SIZE_ALPHA_BYTE : sizeof(lv_color_t);
+        uint8_t px_size_byte = cf == LV_IMG_CF_RGBA ? LV_IMG_PX_SIZE_ALPHA_BYTE : sizeof(lv_color_t);
 
         /*Go to the first displayed pixel of the map*/
         int32_t src_stride = lv_area_get_width(coords);
@@ -86,7 +111,7 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_img_decoded(struct _lv_draw_ctx_t * draw_c
 
         bool transform = draw_dsc->angle != 0 || draw_dsc->zoom != LV_IMG_ZOOM_NONE ? true : false;
         /*Simple ARGB image. Handle it as special case because it's very common*/
-        if(!mask_any && !transform && cf == LV_IMG_CF_TRUE_COLOR_ALPHA && draw_dsc->recolor_opa == LV_OPA_TRANSP) {
+        if(!mask_any && !transform && cf == LV_IMG_CF_RGBA && draw_dsc->recolor_opa == LV_OPA_TRANSP) {
             uint32_t hor_res = (uint32_t) lv_disp_get_hor_res(_lv_refr_get_disp_refreshing());
             uint32_t mask_buf_size = lv_area_get_size(&draw_area) > (uint32_t) hor_res ? hor_res : lv_area_get_size(&draw_area);
             lv_color_t * src_buf_rgb = lv_mem_buf_get(mask_buf_size * sizeof(lv_color_t));
@@ -157,7 +182,6 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_img_decoded(struct _lv_draw_ctx_t * draw_c
 
             const uint8_t * src_buf_tmp = NULL;
 #if LV_DRAW_COMPLEX
-            lv_img_transform_dsc_t trans_dsc;
             lv_memset_00(&trans_dsc, sizeof(lv_img_transform_dsc_t));
             if(transform) {
                 trans_dsc.cfg.angle = draw_dsc->angle;
@@ -187,7 +211,7 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_img_decoded(struct _lv_draw_ctx_t * draw_c
                 lv_color_premult(draw_dsc->recolor, draw_dsc->recolor_opa, recolor_premult);
             }
 
-            blend_dsc.mask_res = (cf != LV_IMG_CF_TRUE_COLOR || draw_dsc->angle ||
+            blend_dsc.mask_res = (cf != LV_IMG_CF_RGB || draw_dsc->angle ||
                                   draw_dsc->zoom != LV_IMG_ZOOM_NONE) ? LV_DRAW_MASK_RES_CHANGED : LV_DRAW_MASK_RES_FULL_COVER;
 
             /*Prepare the `mask_buf`if there are other masks*/
@@ -207,28 +231,39 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_img_decoded(struct _lv_draw_ctx_t * draw_c
                 int32_t rot_x = blend_area.x1 - coords->x1;
 #endif
 
+                lv_area_t dest_area;
+                lv_color_t cbuf_row[1024];
+                lv_opa_t abuf_row[1024];
+                dest_area.x1 = rot_x;
+                dest_area.y1 = rot_y + y;
+                dest_area.x2 = rot_x + draw_area_w - 1;
+                dest_area.y2 = rot_y + y;
+                if(transform) {
+                    tranform_cb(&dest_area, cbuf_row, abuf_row);
+                }
+
                 for(x = 0; x < draw_area_w; x++, px_i++, map_px += px_size_byte) {
 
 #if LV_DRAW_COMPLEX
                     if(transform) {
 
                         /*Transform*/
-                        bool ret;
-                        ret = _lv_img_buf_transform(&trans_dsc, rot_x + x, rot_y + y);
-                        if(ret == false) {
+                        //                        bool ret;
+                        //                        ret = _lv_img_buf_transform(&trans_dsc, rot_x + x, rot_y + y);
+                        if(abuf_row[x] == 0) {
                             mask_buf[px_i] = LV_OPA_TRANSP;
                             continue;
                         }
                         else {
-                            mask_buf[px_i] = trans_dsc.res.opa;
-                            c.full = trans_dsc.res.color.full;
+                            mask_buf[px_i] = abuf_row[x];
+                            c.full = cbuf_row[x].full;
                         }
                     }
                     /*No transform*/
                     else
 #endif
                     {
-                        if(cf == LV_IMG_CF_TRUE_COLOR_ALPHA) {
+                        if(cf == LV_IMG_CF_RGBA) {
                             lv_opa_t px_opa = map_px[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
                             mask_buf[px_i] = px_opa;
                             if(px_opa == 0) {
@@ -252,7 +287,7 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_img_decoded(struct _lv_draw_ctx_t * draw_c
                         c.full = *((uint32_t *)map_px);
                         c.ch.alpha = 0xFF;
 #endif
-                        if(cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED) {
+                        if(cf == LV_IMG_CF_RGB_CHK) {
                             if(c.full == chroma_keyed_color.full) {
                                 mask_buf[px_i] = LV_OPA_TRANSP;
 #if  LV_COLOR_DEPTH == 32
@@ -296,7 +331,7 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_img_decoded(struct _lv_draw_ctx_t * draw_c
                     blend_area.y2 = blend_area.y1;
 
                     px_i = 0;
-                    blend_dsc.mask_res = (cf != LV_IMG_CF_TRUE_COLOR || draw_dsc->angle ||
+                    blend_dsc.mask_res = (cf != LV_IMG_CF_RGB || draw_dsc->angle ||
                                           draw_dsc->zoom != LV_IMG_ZOOM_NONE) ? LV_DRAW_MASK_RES_CHANGED : LV_DRAW_MASK_RES_FULL_COVER;
 
                     /*Prepare the `mask_buf`if there are other masks*/

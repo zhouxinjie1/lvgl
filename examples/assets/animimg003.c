@@ -710,7 +710,7 @@ const lv_img_dsc_t animimg003 = {
   .header.w = 130,
   .header.h = 170,
   .data_size = 22100 * LV_IMG_PX_SIZE_ALPHA_BYTE,
-  .header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA,
+  .header.cf = LV_IMG_CF_RGBA,
   .data = animimg003_map,
 };
 

@@ -545,7 +545,7 @@ static void draw_img(lv_event_t * e)
         }
 
         /*Non true color format might have "holes"*/
-        if(img->cf != LV_IMG_CF_TRUE_COLOR && img->cf != LV_IMG_CF_RAW) {
+        if(img->cf != LV_IMG_CF_RGB && img->cf != LV_IMG_CF_RAW) {
             info->res = LV_COVER_RES_NOT_COVER;
             return;
         }

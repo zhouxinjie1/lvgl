@@ -581,19 +581,19 @@ lv_disp_rot_t lv_disp_get_rotation(lv_disp_t * disp)
 void lv_disp_drv_use_generic_set_px_cb(lv_disp_drv_t * disp_drv, lv_img_cf_t cf)
 {
     switch(cf) {
-        case LV_IMG_CF_TRUE_COLOR_ALPHA:
+        case LV_IMG_CF_RGBA:
             disp_drv->set_px_cb = set_px_true_color_alpha;
             break;
-        case LV_IMG_CF_ALPHA_1BIT:
+        case LV_IMG_CF_A1:
             disp_drv->set_px_cb = set_px_cb_alpha1;
             break;
-        case LV_IMG_CF_ALPHA_2BIT:
+        case LV_IMG_CF_A2:
             disp_drv->set_px_cb = set_px_cb_alpha2;
             break;
-        case LV_IMG_CF_ALPHA_4BIT:
+        case LV_IMG_CF_A4:
             disp_drv->set_px_cb = set_px_cb_alpha4;
             break;
-        case LV_IMG_CF_ALPHA_8BIT:
+        case LV_IMG_CF_A8:
             disp_drv->set_px_cb = set_px_cb_alpha8;
             break;
         default:
@@ -621,7 +621,7 @@ static void set_px_cb_alpha1(lv_disp_drv_t * disp_drv, uint8_t * buf, lv_coord_t
     lv_img_dsc_t d;
     d.data = buf;
     d.header.w = buf_w;
-    d.header.cf = LV_IMG_CF_ALPHA_1BIT;
+    d.header.cf = LV_IMG_CF_A1;
 
     set_px_alpha_generic(&d, x, y, color, opa);
 }
@@ -635,7 +635,7 @@ static void set_px_cb_alpha2(lv_disp_drv_t * disp_drv, uint8_t * buf, lv_coord_t
     lv_img_dsc_t d;
     d.data = buf;
     d.header.w = buf_w;
-    d.header.cf = LV_IMG_CF_ALPHA_2BIT;
+    d.header.cf = LV_IMG_CF_A2;
 
     set_px_alpha_generic(&d, x, y, color, opa);
 }
@@ -649,7 +649,7 @@ static void set_px_cb_alpha4(lv_disp_drv_t * disp_drv, uint8_t * buf, lv_coord_t
     lv_img_dsc_t d;
     d.data = buf;
     d.header.w = buf_w;
-    d.header.cf = LV_IMG_CF_ALPHA_4BIT;
+    d.header.cf = LV_IMG_CF_A4;
 
     set_px_alpha_generic(&d, x, y, color, opa);
 }
@@ -663,7 +663,7 @@ static void set_px_cb_alpha8(lv_disp_drv_t * disp_drv, uint8_t * buf, lv_coord_t
     lv_img_dsc_t d;
     d.data = buf;
     d.header.w = buf_w;
-    d.header.cf = LV_IMG_CF_ALPHA_8BIT;
+    d.header.cf = LV_IMG_CF_A8;
 
     set_px_alpha_generic(&d, x, y, color, opa);
 }
@@ -694,7 +694,7 @@ static void set_px_true_color_alpha(lv_disp_drv_t * disp_drv, uint8_t * buf, lv_
     d.header.always_zero = 0;
     d.header.h = 1;    /*Doesn't matter*/;
     d.header.w = buf_w;
-    d.header.cf = LV_IMG_CF_TRUE_COLOR_ALPHA;
+    d.header.cf = LV_IMG_CF_RGBA;
 
     lv_color_t bg_color = lv_img_buf_get_px_color(&d, x, y, lv_color_black());
     lv_opa_t bg_opa = lv_img_buf_get_px_alpha(&d, x, y);
