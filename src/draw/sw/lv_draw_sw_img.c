@@ -386,12 +386,13 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_img_decoded(struct _lv_draw_ctx_t * draw_c
 
             /*Apply recolor*/
             if(draw_dsc->recolor_opa > LV_OPA_MIN) {
-                uint16_t premult_v;
+                uint16_t premult_v[3];
                 lv_opa_t recolor_opa = draw_dsc->recolor_opa;
-                lv_color_premult(draw_dsc->recolor, recolor_opa, &premult_v);
+                lv_color_t recolor = draw_dsc->recolor;
+                lv_color_premult(recolor, recolor_opa, premult_v);
                 uint32_t i;
                 for(i = 0; i < buf_size; i++) {
-                    lv_color_premult(rgb_buf[i], recolor_opa, &premult_v);
+                    rgb_buf[i] = lv_color_mix_premult(premult_v, rgb_buf[i], recolor_opa);
                 }
             }
 
