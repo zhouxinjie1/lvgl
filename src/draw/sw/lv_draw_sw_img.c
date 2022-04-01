@@ -138,7 +138,7 @@ static void transform_point(const lv_img_transform_dsc_t * dsc, int32_t x, int32
     }
 }
 
-#define CENTER_LIMIT 0x1
+#define CENTER_LIMIT 0x40
 void tranform_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t src_w, lv_coord_t src_h,
                  lv_coord_t src_stride, const lv_draw_img_dsc_t * draw_dsc, lv_img_cf_t cf, lv_color_t * cbuf, lv_opa_t * abuf)
 {
@@ -226,12 +226,12 @@ void tranform_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t s
                     xs_ups += xs_step;
                     continue;
                 }
-                //
-                //              abuf[x] = 0xff;
-                //              cbuf[x].full = 0xf000;
-                //              ys_ups += ys_step;
-                //              xs_ups += xs_step;
-                //              continue;
+
+                //            abuf[x] = 0xff;
+                //            cbuf[x].full = 0xf000;
+                //            ys_ups += ys_step;
+                //            xs_ups += xs_step;
+                //            continue;
 
 
                 /*Get the direction the hor and ver neighbor
@@ -265,56 +265,71 @@ void tranform_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t s
                     px_ver = src_tmp + y_next * src_stride * LV_IMG_PX_SIZE_ALPHA_BYTE;
                 }
 
-                /*If all are out of the image just set alpha to 0x00*/
-                if(px_base == NULL && px_hor == NULL && px_ver == NULL) {
-                    abuf[x] = 0x00;
-                    ys_ups += ys_step;
-                    xs_ups += xs_step;
-                    continue;
-                }
-                /*More complex cases, partially on the image*/
-                else if(px_base == NULL && px_hor == NULL) {
-                    /*On the top/bottom edge*/
-                    px_base = px_ver;
-                    px_hor = px_ver;
-                }
-                else if(px_base == NULL && px_ver == NULL) {
-                    /*On the left/right edge*/
-                    px_base = px_hor;
-                    px_ver = px_hor;
-                }
-                else if(px_hor == NULL && px_ver == NULL) {
-                    /*On the corners*/
-                    px_hor = px_base;
-                    px_ver = px_base;
-                }
+                if(px_base == NULL || px_hor == NULL || px_ver == NULL) {
+                    //                    ys_ups += ys_step;
+                    //                    xs_ups += xs_step;
+                    //                    continue;
+                    /*If all are out of the image just set alpha to 0x00*/
+                    //                    printf("---\n");
+                    if(px_base == NULL && px_hor == NULL && px_ver == NULL) {
+                        abuf[x] = 0x00;
+                        ys_ups += ys_step;
+                        xs_ups += xs_step;
+                        continue;
+                    }
+                    /*More complex cases, partially on the image*/
+                    else if(px_base == NULL && px_hor == NULL) {
+                        /*On the top/bottom edge*/
+                        px_base = px_ver;
+                        px_hor = px_ver;
+                    }
+                    else if(px_base == NULL && px_ver == NULL) {
+                        /*On the left/right edge*/
+                        px_base = px_hor;
+                        px_ver = px_hor;
+                    }
+                    else if(px_hor == NULL && px_ver == NULL) {
+                        /*On the corners*/
+                        px_hor = px_base;
+                        px_ver = px_base;
+                    }
 
-                //                printf("%d, %d, %d, %d\n", xs_int, ys_int, x_next, y_next);
+                    //                printf("%d, %d, %d, %d\n", xs_int, ys_int, x_next, y_next);
 
-                /*Now only hor or ver can be NULL
-                 *It's not possible that base is NULL is hor and ver was on the image*/
-                if(px_ver == NULL) px_ver = px_base;
-                else if(px_hor == NULL) px_hor = px_base;
+                    /*Now only hor or ver can be NULL
+                     *It's not possible that base is NULL is hor and ver was on the image*/
+                    if(px_ver == NULL) {
+                        px_ver = px_base;
 
+                    }
+                    else if(px_hor == NULL) {
+                        px_hor = px_base;
+                    }
+                }
+                else {
+                    //                    printf("-\n");
+                }
+                //                    printf("\n");
                 //
                 lv_opa_t a_base = px_base[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
                 lv_opa_t a_ver = px_ver[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
                 lv_opa_t a_hor = px_hor[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
 
-                a_ver = ((a_ver * ys_fract) + (a_base * (0xFF - ys_fract))) >> 8;
-                a_hor = ((a_hor * xs_fract) + (a_base * (0xFF - xs_fract))) >> 8;
+                if(a_ver != a_base) a_ver = ((a_ver * ys_fract) + (a_base * (0xFF - ys_fract))) >> 8;
+                if(a_hor != a_base) a_hor = ((a_hor * xs_fract) + (a_base * (0xFF - xs_fract))) >> 8;
                 abuf[x] = (a_ver + a_hor) >> 1;
 
-                lv_color_t c_base;
-                lv_color_t c_ver;
-                lv_color_t c_hor;
-                c_base.full = px_base[0] + (px_base[1] << 8);
-                c_ver.full = px_ver[0] + (px_ver[1] << 8);
-                c_hor.full = px_hor[0] + (px_hor[1] << 8);
-                c_ver = lv_color_mix(c_ver, c_base, ys_fract);
-                c_hor = lv_color_mix(c_hor, c_base, xs_fract);
-                cbuf[x] = lv_color_mix(c_hor, c_ver, LV_OPA_50);
-                //
+                if(abuf[x]) {
+                    lv_color_t c_base;
+                    lv_color_t c_ver;
+                    lv_color_t c_hor;
+                    c_base.full = px_base[0] + (px_base[1] << 8);
+                    c_ver.full = px_ver[0] + (px_ver[1] << 8);
+                    c_hor.full = px_hor[0] + (px_hor[1] << 8);
+                    c_ver = lv_color_mix(c_ver, c_base, ys_fract);
+                    c_hor = lv_color_mix(c_hor, c_base, xs_fract);
+                    cbuf[x] = c_base; //lv_color_mix(c_hor, c_ver, LV_OPA_50);
+                }
 
                 xs_ups += xs_step;
                 ys_ups += ys_step;
