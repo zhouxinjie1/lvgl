@@ -191,12 +191,7 @@ void tranform_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t s
             for(x = 0; x < dest_w; x++) {
                 int32_t xs_int = xs_ups >> 8;
                 int32_t ys_int = ys_ups >> 8;
-                int32_t xs_fract = xs_ups & 0xFF;
-                int32_t ys_fract = ys_ups & 0xFF;
 
-                const uint8_t * src_tmp;
-                src_tmp = trans_dsc.cfg.src;
-                src_tmp += (ys_int * src_stride * LV_IMG_PX_SIZE_ALPHA_BYTE) + xs_int * LV_IMG_PX_SIZE_ALPHA_BYTE;
                 /*Fully out of the image*/
                 if(xs_int < -1 || xs_int > src_w || ys_int < -1 || ys_int > src_h) {
                     abuf[x] = 0x00;
@@ -205,31 +200,37 @@ void tranform_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t s
                     continue;
                 }
 
-                /*Get the direction the hor and ver neighbor
-                 *`fract` will be in range of 0x00..0xFF and `next` (+/-1) indicates the direction*/
-                int32_t x_next;
-                int32_t y_next;
-                if(xs_fract < 0x80) {
-                    x_next = -1;
-                    xs_fract = (0x7F - xs_fract) * 2;
-                }
-                else {
-                    x_next = 1;
-                    xs_fract = (xs_fract - 0x80) * 2;
-                }
-                if(ys_fract < 0x80) {
-                    y_next = -1;
-                    ys_fract = (0x7F - ys_fract) * 2;
-                }
-                else {
-                    y_next = 1;
-                    ys_fract = (ys_fract - 0x80) * 2;
-                }
-
-                const uint8_t * px_base = NULL;
-                const uint8_t * px_hor = NULL;
-                const uint8_t * px_ver = NULL;
                 if(xs_int > 0 && xs_int < src_w - 1 && ys_int > 0 && ys_int < src_h - 1) {
+                    /*Get the direction the hor and ver neighbor
+                     *`fract` will be in range of 0x00..0xFF and `next` (+/-1) indicates the direction*/
+                    int32_t xs_fract = xs_ups & 0xFF;
+                    int32_t ys_fract = ys_ups & 0xFF;
+                    int32_t x_next;
+                    int32_t y_next;
+                    if(xs_fract < 0x80) {
+                        x_next = -1;
+                        xs_fract = (0x7F - xs_fract) * 2;
+                    }
+                    else {
+                        x_next = 1;
+                        xs_fract = (xs_fract - 0x80) * 2;
+                    }
+                    if(ys_fract < 0x80) {
+                        y_next = -1;
+                        ys_fract = (0x7F - ys_fract) * 2;
+                    }
+                    else {
+                        y_next = 1;
+                        ys_fract = (ys_fract - 0x80) * 2;
+                    }
+
+                    const uint8_t * src_tmp;
+                    src_tmp = trans_dsc.cfg.src;
+                    src_tmp += (ys_int * src_stride * LV_IMG_PX_SIZE_ALPHA_BYTE) + xs_int * LV_IMG_PX_SIZE_ALPHA_BYTE;
+
+                    const uint8_t * px_base = NULL;
+                    const uint8_t * px_hor = NULL;
+                    const uint8_t * px_ver = NULL;
                     px_base = src_tmp;
                     px_hor = src_tmp + x_next * LV_IMG_PX_SIZE_ALPHA_BYTE;
                     px_ver = src_tmp + y_next * src_stride * LV_IMG_PX_SIZE_ALPHA_BYTE;
@@ -256,7 +257,6 @@ void tranform_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t s
                 }
                 else {
                     abuf[x] = 0x0;
-                    //                  cbuf[x].full = 0xf000; //lv_color_mix(c_hor, c_ver, LV_OPA_50);
                 }
 
                 xs_ups += xs_step;
