@@ -85,29 +85,31 @@ void convert_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t sr
         }
     }
     else if(cf == LV_IMG_CF_RGBA) {
-        lv_coord_t src_new_line_step_px = (src_stride - lv_area_get_width(dest_area));
         src_tmp8 += (src_stride * dest_area->y1 * LV_IMG_PX_SIZE_ALPHA_BYTE) + dest_area->x1 * LV_IMG_PX_SIZE_ALPHA_BYTE;
+
+        lv_coord_t src_new_line_step_px = (src_stride - lv_area_get_width(dest_area));
         lv_coord_t src_new_line_step_byte = src_new_line_step_px * LV_IMG_PX_SIZE_ALPHA_BYTE;
 
-        for(y = dest_area->y1; y <= dest_area->y2; y++) {
-            for(x = dest_area->x1; x <= dest_area->x2; x++) {
+        lv_coord_t dest_h = lv_area_get_height(dest_area);
+        lv_coord_t dest_w = lv_area_get_width(dest_area);
+        for(y = 0; y < dest_h; y++) {
+            for(x = 0; x < dest_w; x++) {
+                abuf[x] = src_tmp8[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                if(abuf[x] != 0) {
 #if LV_COLOR_DEPTH == 8
-                cbuf->full = *src_tmp8;
-                *abuf = src_tmp8[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    cbuf[x] = *src_tmp8;
 #elif LV_COLOR_DEPTH == 16
-                cbuf->full = *src_tmp8;
-                cbuf->full += (*(src_tmp8 + 1)) << 8;
-                *abuf = src_tmp8[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    cbuf[x].full = *src_tmp8 + ((*(src_tmp8 + 1)) << 8);
 #elif LV_COLOR_DEPTH == 32
-                *cbuf = *((lv_color_t *) src_tmp8);
-                cbuf->ch.alpha = 0xff;
-                *abuf = src_tmp8[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    cbuf[x] = *((lv_color_t *) src_tmp8);
+                    cbuf[x].ch.alpha = 0xff;
 #endif
+                }
                 src_tmp8 += LV_IMG_PX_SIZE_ALPHA_BYTE;
-                cbuf++;
-                abuf++;
 
             }
+            cbuf += dest_w;
+            abuf += dest_w;
             src_tmp8 += src_new_line_step_byte;
         }
     }
@@ -231,9 +233,9 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_img_decoded(struct _lv_draw_ctx_t * draw_c
 
             /*Apply recolor*/
             lv_coord_t i;
-            for(i = 0; i < buf_size; i++) {
-                //TODO
-            }
+            //            for(i = 0; i < buf_size; i++) {
+            //                //TODO
+            //            }
 
             /*Apply the masks if any*/
             if(mask_any) {
