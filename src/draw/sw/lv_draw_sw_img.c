@@ -95,16 +95,14 @@ void convert_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t sr
         for(y = 0; y < dest_h; y++) {
             for(x = 0; x < dest_w; x++) {
                 abuf[x] = src_tmp8[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
-                if(abuf[x] != 0) {
 #if LV_COLOR_DEPTH == 8
-                    cbuf[x] = *src_tmp8;
+                cbuf[x] = *src_tmp8;
 #elif LV_COLOR_DEPTH == 16
-                    cbuf[x].full = *src_tmp8 + ((*(src_tmp8 + 1)) << 8);
+                cbuf[x].full = *src_tmp8 + ((*(src_tmp8 + 1)) << 8);
 #elif LV_COLOR_DEPTH == 32
-                    cbuf[x] = *((lv_color_t *) src_tmp8);
-                    cbuf[x].ch.alpha = 0xff;
+                cbuf[x] = *((lv_color_t *) src_tmp8);
+                cbuf[x].ch.alpha = 0xff;
 #endif
-                }
                 src_tmp8 += LV_IMG_PX_SIZE_ALPHA_BYTE;
 
             }
@@ -114,6 +112,32 @@ void convert_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t sr
         }
     }
 }
+
+static void transform_point(const lv_img_transform_dsc_t * dsc, int32_t x, int32_t y, int32_t * xs, int32_t * ys)
+{
+    /*Get the target point relative coordinates to the pivot*/
+    int32_t xt = x - dsc->cfg.pivot_x;
+    int32_t yt = y - dsc->cfg.pivot_y;
+
+    if(dsc->cfg.zoom == LV_IMG_ZOOM_NONE) {
+        /*Get the source pixel from the upscaled image*/
+        *xs = ((dsc->tmp.cosma * xt - dsc->tmp.sinma * yt) >> (_LV_TRANSFORM_TRIGO_SHIFT - 8)) + dsc->tmp.pivot_x_256;
+        *ys = ((dsc->tmp.sinma * xt + dsc->tmp.cosma * yt) >> (_LV_TRANSFORM_TRIGO_SHIFT - 8)) + dsc->tmp.pivot_y_256;
+    }
+    else if(dsc->cfg.angle == 0) {
+        xt = (int32_t)((int32_t)xt * dsc->tmp.zoom_inv) >> _LV_ZOOM_INV_UPSCALE;
+        yt = (int32_t)((int32_t)yt * dsc->tmp.zoom_inv) >> _LV_ZOOM_INV_UPSCALE;
+        *xs = xt + dsc->tmp.pivot_x_256;
+        *ys = yt + dsc->tmp.pivot_y_256;
+    }
+    else {
+        xt = (int32_t)((int32_t)xt * dsc->tmp.zoom_inv) >> _LV_ZOOM_INV_UPSCALE;
+        yt = (int32_t)((int32_t)yt * dsc->tmp.zoom_inv) >> _LV_ZOOM_INV_UPSCALE;
+        *xs = ((dsc->tmp.cosma * xt - dsc->tmp.sinma * yt) >> (_LV_TRANSFORM_TRIGO_SHIFT)) + dsc->tmp.pivot_x_256;
+        *ys = ((dsc->tmp.sinma * xt + dsc->tmp.cosma * yt) >> (_LV_TRANSFORM_TRIGO_SHIFT)) + dsc->tmp.pivot_y_256;
+    }
+}
+
 
 void tranform_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t src_w, lv_coord_t src_h,
                  lv_coord_t src_stride, const lv_draw_img_dsc_t * draw_dsc, lv_img_cf_t cf, lv_color_t * cbuf, lv_opa_t * abuf)
@@ -132,21 +156,150 @@ void tranform_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t s
     trans_dsc.cfg.antialias = draw_dsc->antialias;
     _lv_img_buf_transform_init(&trans_dsc);
 
+    lv_coord_t dest_w = lv_area_get_width(dest_area);
+    lv_coord_t dest_h = lv_area_get_height(dest_area);
     lv_coord_t y;
-    for(y = dest_area->y1; y <= dest_area->y2; y++) {
+    for(y = 0; y < dest_h; y++) {
+        int32_t xs1_ups, ys1_ups, xs2_ups, ys2_ups;
+        transform_point(&trans_dsc, dest_area->x1, dest_area->y1 + y, &xs1_ups, &ys1_ups);
+        transform_point(&trans_dsc, dest_area->x2, dest_area->y1 + y, &xs2_ups, &ys2_ups);
+
+        int32_t xs_step = (xs2_ups - xs1_ups) / dest_w;
+        int32_t ys_step = (ys2_ups - ys1_ups) / dest_w;
+
         lv_coord_t x;
-        for(x = dest_area->x1; x <= dest_area->x2; x++) {
-            bool ret = _lv_img_buf_transform(&trans_dsc, x, y);
-            if(ret) {
-                *cbuf = trans_dsc.res.color;
-                *abuf = trans_dsc.res.opa;
+        int32_t xs_ups = xs1_ups + xs_step / 2;     /*Init. + go the center of the pixel*/
+        int32_t ys_ups = ys1_ups + ys_step / 2;
+        if(trans_dsc.cfg.antialias == 0) {
+            for(x = 0; x < dest_w; x++) {
+                int32_t xs_int = xs_ups >> 8;
+                int32_t ys_int = ys_ups >> 8;
+                if(xs_int < 0 || xs_int >= src_w || ys_int < 0 || ys_int >= src_h) {
+                    abuf[x] = 0;
+                }
+                else {
+                    const uint8_t * src_tmp;
+                    src_tmp = trans_dsc.cfg.src;
+                    src_tmp += (ys_int * src_stride * LV_IMG_PX_SIZE_ALPHA_BYTE) + xs_int * LV_IMG_PX_SIZE_ALPHA_BYTE;
+                    abuf[x] = src_tmp[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    cbuf[x].full = src_tmp[0] + (src_tmp[1] << 8);
+                }
+                xs_ups += xs_step;
+                ys_ups += ys_step;
             }
-            else {
-                *abuf = 0;
-            }
-            cbuf++;
-            abuf++;
         }
+        else {
+            for(x = 0; x < dest_w; x++) {
+                int32_t xs_int = xs_ups >> 8;
+                int32_t ys_int = ys_ups >> 8;
+                int32_t xs_fract = xs_ups & 0xFF;
+                int32_t ys_fract = ys_ups & 0xFF;
+
+                int32_t x_next = 1;
+                if(xs_fract < 0x80) {
+                    x_next = -1;
+                    xs_fract = 0xff - xs_fract;
+                }
+                int32_t y_next = 1;
+                if(ys_fract < 0x80) {
+                    y_next = -1;
+                    ys_fract = 0xff - ys_fract;
+                }
+
+                const uint8_t * src_tmp;
+                src_tmp = trans_dsc.cfg.src;
+                src_tmp += (ys_int * src_stride * LV_IMG_PX_SIZE_ALPHA_BYTE) + xs_int * LV_IMG_PX_SIZE_ALPHA_BYTE;
+
+                /*Base pixel*/
+                const uint8_t * px_base = NULL;
+                if(ys_int >= 0 && ys_int < src_h && xs_int >= 0 && xs_int  < src_w) {
+                    px_base = src_tmp;
+                }
+
+                /*Horizontal neighbor*/
+                const uint8_t * px_hor = NULL;
+                if(ys_int >= 0 && ys_int < src_h && xs_int + x_next >= 0 && xs_int + x_next < src_w) {
+                    px_hor = src_tmp + x_next * LV_IMG_PX_SIZE_ALPHA_BYTE;
+                }
+
+                /*Vertical neighbor*/
+                const uint8_t * px_ver = NULL;
+                if(ys_int + y_next >= 0 && ys_int + y_next < src_h && xs_int >= 0 && xs_int < src_w) {
+                    px_ver = src_tmp + y_next * src_stride * LV_IMG_PX_SIZE_ALPHA_BYTE;
+                }
+
+                /*All 3 pixels are on the image*/
+                if(px_base && px_hor && px_ver) {
+                    lv_opa_t a_base = px_base[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    lv_opa_t a_ver = px_ver[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    lv_opa_t a_hor = px_hor[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+
+                    a_ver = ((a_ver * ys_fract) + (a_base * (0xff - ys_fract))) >> 8;
+                    a_hor = ((a_hor * xs_fract) + (a_base * (0xff - xs_fract))) >> 8;
+                    abuf[x] = (a_ver + a_hor) >> 1;
+
+                    lv_color_t c_base;
+                    lv_color_t c_ver;
+                    lv_color_t c_hor;
+                    c_base.full = px_base[0] + (px_base[1] << 8);
+                    c_ver.full = px_ver[0] + (px_ver[1] << 8);
+                    c_hor.full = px_hor[0] + (px_hor[1] << 8);
+
+                    c_ver = lv_color_mix(c_ver, c_base, ys_fract);
+                    c_hor = lv_color_mix(c_hor, c_base, xs_fract);
+                    cbuf[x] = lv_color_mix(c_hor, c_ver, LV_OPA_50);
+                }
+                /*All 3 on the image*/
+                else if(px_base == NULL && px_hor == NULL && px_ver == NULL) {
+                    abuf[x] = 0x00;
+                }
+                /*Only px_base*/
+                else if(px_hor == NULL && px_ver == NULL) {
+                    abuf[x] = px_base[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                }
+                /*Only px_hor*/
+                else if(px_base == NULL && px_ver == NULL) {
+                    abuf[x] = px_hor[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                }
+                /*Only px_ver*/
+                else if(px_base == NULL && px_hor == NULL) {
+                    abuf[x] = px_ver[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                }
+                /*Only hor*/
+                else if(px_ver == NULL) {
+                    lv_opa_t a_base = px_base[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    lv_opa_t a_hor = px_hor[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    abuf[x] = ((a_hor * xs_fract) + (a_base * (0xff - xs_fract))) >> 8;
+
+                    lv_color_t c_base;
+                    lv_color_t c_hor;
+                    c_base.full = px_base[0] + (px_base[1] << 8);
+                    c_hor.full = px_hor[0] + (px_hor[1] << 8);
+                    cbuf[x] = lv_color_mix(c_hor, c_base, ys_fract);
+                }
+                /*Only ver*/
+                else if(px_hor == NULL) {
+                    lv_opa_t a_base = px_base[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    lv_opa_t a_ver = px_ver[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    abuf[x] = ((a_ver * ys_fract) + (a_base * (0xff - ys_fract))) >> 8;
+
+                    lv_color_t c_base;
+                    lv_color_t c_ver;
+                    c_base.full = px_base[0] + (px_base[1] << 8);
+                    c_ver.full = px_ver[0] + (px_ver[1] << 8);
+                    cbuf[x] = lv_color_mix(c_ver, c_base, ys_fract);
+                }
+                else {
+                    abuf[x] = 0xff;
+                    LV_LOG_WARN("Not handled case");
+                }
+
+                xs_ups += xs_step;
+                ys_ups += ys_step;
+            }
+        }
+        cbuf += dest_w;
+        abuf += dest_w;
     }
 }
 
@@ -202,7 +355,7 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_img_decoded(struct _lv_draw_ctx_t * draw_c
         }
 
         /*Create buffers and masks*/
-        lv_coord_t buf_size = buf_w * buf_h;
+        uint32_t buf_size = buf_w * buf_h;
 
         lv_color_t * rgb_buf = lv_mem_buf_get(buf_size * sizeof(lv_color_t));
         lv_opa_t * mask_buf = lv_mem_buf_get(buf_size);
@@ -232,10 +385,15 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_sw_img_decoded(struct _lv_draw_ctx_t * draw_c
             }
 
             /*Apply recolor*/
-            lv_coord_t i;
-            //            for(i = 0; i < buf_size; i++) {
-            //                //TODO
-            //            }
+            if(draw_dsc->recolor_opa > LV_OPA_MIN) {
+                uint16_t premult_v;
+                lv_opa_t recolor_opa = draw_dsc->recolor_opa;
+                lv_color_premult(draw_dsc->recolor, recolor_opa, &premult_v);
+                uint32_t i;
+                for(i = 0; i < buf_size; i++) {
+                    lv_color_premult(rgb_buf[i], recolor_opa, &premult_v);
+                }
+            }
 
             /*Apply the masks if any*/
             if(mask_any) {
