@@ -195,16 +195,29 @@ void tranform_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t s
                 int32_t xs_fract = xs_ups & 0xFF;
                 int32_t ys_fract = ys_ups & 0xFF;
 
-                int32_t x_next = 1;
+                /*Farct is in the range of 0x00..0x7F*/
+                int32_t x_next;
                 if(xs_fract < 0x80) {
                     x_next = -1;
-                    xs_fract = 0xff - xs_fract;
+                    xs_fract = 0x7F - xs_fract;
                 }
-                int32_t y_next = 1;
+                else {
+                    x_next = 1;
+                    xs_fract = xs_fract - 0x80;
+                }
+                int32_t y_next;
                 if(ys_fract < 0x80) {
                     y_next = -1;
-                    ys_fract = 0xff - ys_fract;
+                    ys_fract = 0x7F - ys_fract;
                 }
+                else {
+                    y_next = 1;
+                    ys_fract = ys_fract - 0x80;
+                }
+
+                /*Fract range to 0x00..0xFE*/
+                xs_fract *= 2;
+                ys_fract *= 2;
 
                 const uint8_t * src_tmp;
                 src_tmp = trans_dsc.cfg.src;
@@ -234,8 +247,8 @@ void tranform_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t s
                     lv_opa_t a_ver = px_ver[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
                     lv_opa_t a_hor = px_hor[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
 
-                    a_ver = ((a_ver * ys_fract) + (a_base * (0xff - ys_fract))) >> 8;
-                    a_hor = ((a_hor * xs_fract) + (a_base * (0xff - xs_fract))) >> 8;
+                    a_ver = ((a_ver * ys_fract) + (a_base * (0xFF - ys_fract))) >> 8;
+                    a_hor = ((a_hor * xs_fract) + (a_base * (0xFF - xs_fract))) >> 8;
                     abuf[x] = (a_ver + a_hor) >> 1;
 
                     lv_color_t c_base;
@@ -248,22 +261,26 @@ void tranform_cb(const lv_area_t * dest_area, const void * src_buf, lv_coord_t s
                     c_ver = lv_color_mix(c_ver, c_base, ys_fract);
                     c_hor = lv_color_mix(c_hor, c_base, xs_fract);
                     cbuf[x] = lv_color_mix(c_hor, c_ver, LV_OPA_50);
+
                 }
-                /*All 3 on the image*/
+                /*Out of image*/
                 else if(px_base == NULL && px_hor == NULL && px_ver == NULL) {
                     abuf[x] = 0x00;
                 }
                 /*Only px_base*/
                 else if(px_hor == NULL && px_ver == NULL) {
                     abuf[x] = px_base[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    cbuf[x].full = px_base[0] + (px_base[1] << 8);
                 }
                 /*Only px_hor*/
                 else if(px_base == NULL && px_ver == NULL) {
                     abuf[x] = px_hor[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    cbuf[x].full = px_hor[0] + (px_hor[1] << 8);
                 }
                 /*Only px_ver*/
                 else if(px_base == NULL && px_hor == NULL) {
                     abuf[x] = px_ver[LV_IMG_PX_SIZE_ALPHA_BYTE - 1];
+                    cbuf[x].full = px_ver[0] + (px_ver[1] << 8);
                 }
                 /*Only hor*/
                 else if(px_ver == NULL) {
