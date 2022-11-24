@@ -293,8 +293,13 @@ LV_ATTRIBUTE_FAST_MEM void lv_draw_label(lv_draw_ctx_t * draw_ctx, const lv_draw
                     sel_coords.y1 = pos.y;
                     sel_coords.x2 = pos.x + letter_w + dsc->letter_space - 1;
                     sel_coords.y2 = pos.y + line_height - 1;
+                    //bug :LABLE选择字符不能反白显示 LABLE selected characters cannot be inverted
+//                     lv_draw_rect(draw_ctx, &draw_dsc_sel, &sel_coords);
+//                     color = dsc->sel_color;
+                    //修改后 
+                    draw_dsc_sel.bg_color=dsc->sel_color;// by zhouxinjie GM_INFO
                     lv_draw_rect(draw_ctx, &draw_dsc_sel, &sel_coords);
-                    color = dsc->sel_color;
+                    color = dsc->sel_bg_color;
                 }
             }
 
