@@ -443,7 +443,9 @@ lv_timer_t * _lv_disp_get_refr_timer(lv_disp_t * disp)
 
 static void scr_load_anim_start(lv_anim_t * a)
 {
-    lv_disp_t * d = lv_obj_get_disp(a->var);
+    // lv_disp_t * d = lv_obj_get_disp(a->var);//MASK return NULL HANDLE,issue description https://blog.csdn.net/u013365881/article/details/134806346
+    lv_disp_t * d = lv_disp_get_default();//JN GMinfo
+    if(!d) return; ///
 
     d->prev_scr = lv_scr_act();
     d->act_scr = a->var;
@@ -468,8 +470,10 @@ static void set_y_anim(void * obj, int32_t v)
 
 static void scr_anim_ready(lv_anim_t * a)
 {
-    lv_disp_t * d = lv_obj_get_disp(a->var);
-
+    // lv_disp_t * d = lv_obj_get_disp(a->var);//MASK return NULL HANDLE,issue description https://blog.csdn.net/u013365881/article/details/134806346
+    lv_disp_t * d = lv_disp_get_default();//JN GMinfo
+    if(!d) return; ///
+    
     lv_event_send(d->act_scr, LV_EVENT_SCREEN_LOADED, NULL);
     lv_event_send(d->prev_scr, LV_EVENT_SCREEN_UNLOADED, NULL);
 
